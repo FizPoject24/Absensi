@@ -72,6 +72,9 @@
     .button-group button {
       margin-left: 15px;
     }
+    .alasan-select {
+      text-align: center; /* Menjaga alasan agar berada di tengah */
+    }
   </style>
 
   <!-- Include jsPDF and autoTable -->
@@ -90,6 +93,7 @@
           <th>Tanggal</th>
           <th>Pelajaran</th>
           <th>Jumlah Hadir / Tidak Hadir</th>
+          <th>Alasan</th>
           <th>Aksi</th>
         </tr>
       </thead>
@@ -107,7 +111,7 @@
     let absensiList = JSON.parse(localStorage.getItem("absensi")) || [];
     let userProfile = JSON.parse(localStorage.getItem("userProfile")) || {
       nama: 'Nama Siswa',
-      kelas: ' 1',
+      kelas: '1',
       sekolah: 'SDN CIBARUSAH JAYA 02',
       guru: 'SRI RAHAYU'
     };
@@ -174,11 +178,11 @@
     
         filteredData.forEach(absen => {
           absen.absensi.forEach(siswa => {
-            dataExport.push([no++, absen.tanggal, siswa.nama, siswa.nis, absen.pelajaran, siswa.status === "Hadir" ? "Hadir" : "", siswa.status === "Tidak Hadir" ? "Tidak Hadir" : ""]);
+            const alasan = siswa.status === "Tidak Hadir" ? siswa.alasan : '';
+            dataExport.push([no++, absen.tanggal, siswa.nama, siswa.nis, absen.pelajaran, siswa.status === "Hadir" ? "Hadir" : "", alasan]);
           });
-        });
+        });        
       });
-    
       // Mengambil data nama dan kelas dari localStorage
       const name = localStorage.getItem("profileName") || "Nama Guru";
       const classInfo = localStorage.getItem("profileClass") || "Kelas: 1";
@@ -202,7 +206,10 @@
           head: [['No', 'Tanggal', 'Nama', 'NIS', 'Mata Pelajaran', 'Hadir', 'Tidak Hadir']],
           body: dataExport,
           startY: 65,  // Adjusted to make space for the profile data
-          theme: 'grid'
+          theme: 'grid',
+          columnStyles: {
+            5: { halign: 'center' },  // Alasan berada di tengah (kolom 6 - 'Hadir' / 'Tidak Hadir')
+          }
         });
     
         doc.save('rekap_absensi_terpilih.pdf');
@@ -210,12 +217,33 @@
         alert("Tidak ada data yang dipilih untuk diunduh.");
       }
     }     
-
+    
+    function simpanAbsensi() {
+      const rows = document.querySelectorAll("#absensiBody tr");
+    
+      rows.forEach(row => {
+        const nis = row.querySelector(".status-select").getAttribute("data-nis");
+        const status = row.querySelector(".status-select").value;
+        let alasan = null;
+        
+        // Cek jika statusnya Tidak Hadir, ambil alasan dari dropdown
+        if (status === "Tidak Hadir") {
+          alasan = row.querySelector(".alasan-select").value;
+        }
+    
+        absensiList.push({ nis, status, alasan });
+      });
+    
+      // Simpan ke localStorage
+      localStorage.setItem("absensi", JSON.stringify(absensiList));
+      alert("Absensi berhasil disimpan!");
+    }
+    
     function kembali() {
       window.location.href = 'dashboard.html'; // Ganti sesuai dengan halaman dashboard Anda
     }
 
     window.onload = loadRekap;
-  </script>
+</script>
 </body>
 </html>
