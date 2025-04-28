@@ -146,7 +146,7 @@
     
         // Tambahkan header bulan
         const bulanRow = document.createElement('tr');
-        bulanRow.innerHTML = `
+        bulanRow.innerHTML = ` 
           <td colspan="6" style="background:#d9edf7; font-weight:bold; text-align:left;">${namaBulan} ${tahun}</td>
         `;
         tbody.appendChild(bulanRow);
@@ -176,11 +176,27 @@
             <td>Hadir: ${hadir}, Tidak: ${tidakHadir}</td>
             <td>
               <button class="btn-danger" onclick="hapusDataTerpilih('${tanggal}', '${pelajaran}')">Hapus</button>
+              <button class="btn-primary" onclick="ubahData('${tanggal}', '${pelajaran}')">Ubah</button>
             </td>
           `;
           tbody.appendChild(row);
         }
       });
+    }
+    
+    function ubahData(tanggal, pelajaran) {
+      const absenData = absensiList.find(a => a.tanggal === tanggal && a.pelajaran === pelajaran);
+    
+      if (!absenData) {
+        alert("Data tidak ditemukan.");
+        return;
+      }
+    
+      // Simpan data ke localStorage sementara
+      localStorage.setItem("dataUbahAbsensi", JSON.stringify(absenData));
+    
+      // Pindah ke halaman ubah_absen.html
+      window.location.href = "ubah_absen.html";
     }
     
 
@@ -219,32 +235,29 @@
           });
         });        
       });
-      // Mengambil data nama dan kelas dari localStorage
+    
       const name = localStorage.getItem("profileName") || "Nama Guru";
       const classInfo = localStorage.getItem("profileClass") || "Kelas: 1";
     
-      // Menambahkan informasi Nama, Kelas, Nama Guru, dan Sekolah di dalam PDF di posisi kiri
       doc.setFontSize(16);
-      
-      // Menghitung posisi horizontal untuk menempatkan teks di tengah
       const pageWidth = doc.internal.pageSize.width;
       const textWidth = doc.getTextWidth("Rekap Absensi");
       const xPosition = (pageWidth - textWidth) / 2;
     
-      doc.text("Rekap Absensi", xPosition, 15); // Menempatkan judul di tengah halaman
+      doc.text("Rekap Absensi", xPosition, 15);
       doc.setFontSize(12);
-      doc.text("Nama Guru: " + name, 10, 45);  // Nama guru di kiri
-      doc.text("Kelas: " + classInfo, 10, 35);  // Menampilkan Kelas dari userProfile
-      doc.text("Sekolah: SDN CIBARUSAH JAYA 02", 10, 55);  // Nama sekolah di kiri
+      doc.text("Nama Guru: " + name, 10, 45);
+      doc.text("Kelas: " + classInfo, 10, 35);
+      doc.text("Sekolah: SDN CIBARUSAH JAYA 02", 10, 55);
     
       if (dataExport.length > 0) {
         doc.autoTable({
           head: [['No', 'Tanggal', 'Nama', 'NIS', 'Mata Pelajaran', 'Hadir', 'Tidak Hadir']],
           body: dataExport,
-          startY: 65,  // Adjusted to make space for the profile data
+          startY: 65,
           theme: 'grid',
           columnStyles: {
-            5: { halign: 'center' },  // Alasan berada di tengah (kolom 6 - 'Hadir' / 'Tidak Hadir')
+            5: { halign: 'center' },
           }
         });
     
@@ -253,33 +266,12 @@
         alert("Tidak ada data yang dipilih untuk diunduh.");
       }
     }     
-    
-    function simpanAbsensi() {
-      const rows = document.querySelectorAll("#absensiBody tr");
-    
-      rows.forEach(row => {
-        const nis = row.querySelector(".status-select").getAttribute("data-nis");
-        const status = row.querySelector(".status-select").value;
-        let alasan = null;
-        
-        // Cek jika statusnya Tidak Hadir, ambil alasan dari dropdown
-        if (status === "Tidak Hadir") {
-          alasan = row.querySelector(".alasan-select").value;
-        }
-    
-        absensiList.push({ nis, status, alasan });
-      });
-    
-      // Simpan ke localStorage
-      localStorage.setItem("absensi", JSON.stringify(absensiList));
-      alert("Absensi berhasil disimpan!");
-    }
-    
+
     function kembali() {
-      window.location.href = 'dashboard.html'; // Ganti sesuai dengan halaman dashboard Anda
+      window.location.href = 'dashboard.html';
     }
 
     window.onload = loadRekap;
-</script>
+  </script>
 </body>
 </html>
