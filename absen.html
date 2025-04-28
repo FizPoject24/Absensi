@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>Absen Siswa</title>
+  <title>Form Absen Otomatis</title>
   <style>
     :root {
       --primary-color: #2E7D32;
@@ -212,6 +212,13 @@
             <th>Hadir</th>
             <th>Tidak Hadir</th>
           </tr>
+          <td>
+            <select class="alasan-select" data-nis="${siswa.nis}" style="display:none;">
+              <option value="Sakit">Sakit</option>
+              <option value="Izin">Izin</option>
+              <option value="Alfa">Alfa</option>
+            </select>
+          </td>          
         </thead>
         <tbody>
           <!-- Data siswa nanti disini -->
@@ -232,13 +239,13 @@
       "Pendidikan Agama dan Budi Pekerti",
       "Pendidikan Pancasila",
       "Bahasa Indonesia",
-      "Ilmu Pengetahuan Alam dan Soial",
+      "Ilmu Pengetahuan Alam dan Sosial",
       "Pendidikan Jasmani, Olahraga dan Kesehatan (PJOK)",
       "Seni dan Budaya",
       "Projek Penguatan Profil Pelajar Pancasila",
     ];
 
-   // Data siswa (40 orang)
+    // Data siswa (40 orang)
     const siswaData = [
       { nama: "Adellia Oktaviani", nis: "242501001" },
       { nama: "Ahmad Fitrah Jumuah", nis: "242501002" },
@@ -299,6 +306,14 @@
         <td>${siswa.nis}</td>
         <td><input type="radio" name="absen-${index}" value="Hadir" /></td>
         <td><input type="radio" name="absen-${index}" value="Tidak Hadir" /></td>
+        <td>
+          <!-- Dropdown Alasan untuk Tidak Hadir -->
+          <select class="alasan-select" data-nis="${siswa.nis}" style="display:none;">
+            <option value="Sakit">Sakit</option>
+            <option value="Izin">Izin</option>
+            <option value="Alfa">Alfa</option>
+          </select>
+        </td>
       `;
       siswaTableBody.appendChild(row);
     });
@@ -307,6 +322,7 @@
     function hadirSemua() {
       siswaData.forEach((_, index) => {
         document.querySelector(`input[name="absen-${index}"][value="Hadir"]`).checked = true;
+        document.querySelector(`.alasan-select[data-nis="${siswaData[index].nis}"]`).style.display = "none"; // Menyembunyikan alasan
       });
       alert("Semua siswa diatur sebagai Hadir");
     }
@@ -315,6 +331,7 @@
     function tidakHadirSemua() {
       siswaData.forEach((_, index) => {
         document.querySelector(`input[name="absen-${index}"][value="Tidak Hadir"]`).checked = true;
+        document.querySelector(`.alasan-select[data-nis="${siswaData[index].nis}"]`).style.display = "inline-block"; // Menampilkan alasan
       });
       alert("Semua siswa diatur sebagai Tidak Hadir");
     }
@@ -323,11 +340,12 @@
     function resetSemua() {
       siswaData.forEach((_, index) => {
         document.querySelectorAll(`input[name="absen-${index}"]`).forEach(input => input.checked = false);
+        document.querySelector(`.alasan-select[data-nis="${siswaData[index].nis}"]`).style.display = "none"; // Menyembunyikan alasan
       });
       alert("Status absensi direset");
     }
 
-    // Simpan Absensi
+    // Fungsi Simpan Absensi
     function simpanAbsensi() {
       const tanggal = document.getElementById('tanggal').value;
       const pelajaran = document.getElementById('pelajaran').value;
@@ -341,13 +359,17 @@
       let semuaTerisi = true;
       const absensi = siswaData.map((siswa, index) => {
         const status = document.querySelector(`input[name="absen-${index}"]:checked`);
+        let alasan = "";
         if (!status) {
           semuaTerisi = false;
+        } else if (status.value === "Tidak Hadir") {
+          alasan = document.querySelector(`.alasan-select[data-nis="${siswa.nis}"]`).value;
         }
         return {
           nama: siswa.nama,
           nis: siswa.nis,
-          status: status ? status.value : "Belum Diisi"
+          status: status ? status.value : "Belum Diisi",
+          alasan: alasan
         };
       });
 
@@ -379,7 +401,18 @@
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('tanggal').value = today;
     };
-  </script>
+
+    // Event listener untuk memilih Hadir atau Tidak Hadir
+    document.querySelector('#siswaTable').addEventListener('change', function(event) {
+      if (event.target.type === 'radio' && event.target.value === 'Tidak Hadir') {
+        const nis = event.target.name.split('-')[1];
+        document.querySelector(`.alasan-select[data-nis="${siswaData[nis].nis}"]`).style.display = "inline-block";
+      } else if (event.target.type === 'radio' && event.target.value === 'Hadir') {
+        const nis = event.target.name.split('-')[1];
+        document.querySelector(`.alasan-select[data-nis="${siswaData[nis].nis}"]`).style.display = "none";
+      }
+    });
+</script>
 
 </body>
 </html>
