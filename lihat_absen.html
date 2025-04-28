@@ -116,37 +116,73 @@
       guru: 'SRI RAHAYU'
     };
 
-    function loadRekap() {
-      const grouped = {};
-      absensiList.forEach(absen => {
-        const key = absen.tanggal + "|" + absen.pelajaran;
-        if (!grouped[key]) grouped[key] = { hadir: 0, tidakHadir: 0 };
-        absen.absensi.forEach(siswa => {
-          if (siswa.status === "Hadir") grouped[key].hadir++;
-          else if (siswa.status === "Tidak Hadir") grouped[key].tidakHadir++;
-        });
-      });
+    function getNamaBulan(bulan) {
+      const namaBulan = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ];
+      return namaBulan[parseInt(bulan) - 1];
+    }    
 
+    function loadRekap() {
+      const groupedByMonth = {};
+    
+      absensiList.forEach(absen => {
+        const [tahun, bulan, tanggal] = absen.tanggal.split('-'); // Misal: '2025-04-28'
+        const bulanKey = `${tahun}-${bulan}`; // contoh: '2025-04'
+    
+        if (!groupedByMonth[bulanKey]) groupedByMonth[bulanKey] = [];
+        groupedByMonth[bulanKey].push(absen);
+      });
+    
       const tbody = document.getElementById("rekapBody");
       tbody.innerHTML = "";
-
-      for (const key in grouped) {
-        const [tanggal, pelajaran] = key.split("|");
-        const { hadir, tidakHadir } = grouped[key];
-
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td><input type="checkbox" class="select-checkbox" data-tanggal="${tanggal}" data-pelajaran="${pelajaran}"></td>
-          <td>${tanggal}</td>
-          <td>${pelajaran}</td>
-          <td>Hadir: ${hadir}, Tidak: ${tidakHadir}</td>
-          <td>
-            <button class="btn-danger" onclick="hapusDataTerpilih('${tanggal}', '${pelajaran}')">Hapus</button>
-          </td>
+    
+      const sortedMonths = Object.keys(groupedByMonth).sort();
+    
+      sortedMonths.forEach(monthKey => {
+        const [tahun, bulan] = monthKey.split('-');
+        const namaBulan = getNamaBulan(bulan);
+    
+        // Tambahkan header bulan
+        const bulanRow = document.createElement('tr');
+        bulanRow.innerHTML = `
+          <td colspan="6" style="background:#d9edf7; font-weight:bold; text-align:left;">${namaBulan} ${tahun}</td>
         `;
-        tbody.appendChild(row);
-      }
+        tbody.appendChild(bulanRow);
+    
+        // Data per bulan
+        const dataBulan = groupedByMonth[monthKey];
+        const groupedData = {};
+    
+        dataBulan.forEach(absen => {
+          const key = absen.tanggal + "|" + absen.pelajaran;
+          if (!groupedData[key]) groupedData[key] = { hadir: 0, tidakHadir: 0 };
+          absen.absensi.forEach(siswa => {
+            if (siswa.status === "Hadir") groupedData[key].hadir++;
+            else if (siswa.status === "Tidak Hadir") groupedData[key].tidakHadir++;
+          });
+        });
+    
+        for (const key in groupedData) {
+          const [tanggal, pelajaran] = key.split("|");
+          const { hadir, tidakHadir } = groupedData[key];
+    
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><input type="checkbox" class="select-checkbox" data-tanggal="${tanggal}" data-pelajaran="${pelajaran}"></td>
+            <td>${tanggal}</td>
+            <td>${pelajaran}</td>
+            <td>Hadir: ${hadir}, Tidak: ${tidakHadir}</td>
+            <td>
+              <button class="btn-danger" onclick="hapusDataTerpilih('${tanggal}', '${pelajaran}')">Hapus</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        }
+      });
     }
+    
 
     function hapusDataTerpilih(tanggal, pelajaran) {
       const konfirmasi = confirm(`Yakin ingin menghapus absensi untuk "${pelajaran}" pada tanggal ${tanggal}?`);
